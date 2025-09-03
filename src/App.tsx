@@ -8,6 +8,8 @@ function App() {
   const [code, setCode] = useState('')
   const [language, setLanguage] = useState('javascript')
   const [isConverting, setIsConverting] = useState(false)
+  const [isExecuting, setIsExecuting] = useState(false)
+  const [executionResult, setExecutionResult] = useState<string | null>(null)
   const [theme, setTheme] = useState('vs-dark')
   const [fontSize, setFontSize] = useState(14)
   const [wordWrap, setWordWrap] = useState(true)
@@ -136,15 +138,50 @@ function App() {
   }
 
   const sampleCode = {
-    javascript: `// Sample JavaScript code
-function fibonacci(n) {
-  if (n <= 1) return n;
-  return fibonacci(n - 1) + fibonacci(n - 2);
-}
+    javascript: `// Sample SheetJS code - Creates and downloads an Excel file
+const workbook = XLSX.utils.book_new();
 
-const numbers = [1, 2, 3, 4, 5];
-const doubled = numbers.map(x => x * 2);
-console.log(doubled);`,
+// Create sample data
+const data = [
+  ["Student Name", "Age", "Gender", "Favorite Sport"],
+  ["Alice", 15, "Female", "Basketball"],
+  ["Bob", 16, "Male", "Soccer"],
+  ["Charlie", 15, "Male", "Tennis"],
+  ["Diana", 16, "Female", "Basketball"]
+];
+
+// Create worksheet from data
+const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+// Set column widths
+worksheet['!cols'] = [
+  { width: 15 }, // Student Name
+  { width: 8 },  // Age  
+  { width: 10 }, // Gender
+  { width: 15 }  // Favorite Sport
+];
+
+// Add the worksheet to workbook
+XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+
+// Add a summary sheet
+const summary = [
+  ["Summary Statistics", ""],
+  ["Total Students", 4],
+  ["Average Age", 15.5],
+  ["Sports Distribution", ""],
+  ["Basketball", 2],
+  ["Soccer", 1], 
+  ["Tennis", 1]
+];
+
+const summarySheet = XLSX.utils.aoa_to_sheet(summary);
+XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+
+// Download the file
+XLSX.writeFile(workbook, "student-data.xlsx");
+
+console.log("Excel file created and downloaded!");`,
     python: `# Sample Python code
 def fibonacci(n):
     if n <= 1:
@@ -202,6 +239,56 @@ public class Fibonacci {
     setFontSize(14)
     setWordWrap(true)
     setMinimap(false)
+    setExecutionResult(null)
+  }
+
+  const executeCode = () => {
+    if (!code.trim()) {
+      alert('Please enter some code to execute!')
+      return
+    }
+
+    if (language !== 'javascript') {
+      alert('Code execution is only supported for JavaScript/SheetJS code!')
+      return
+    }
+
+    setIsExecuting(true)
+    setExecutionResult(null)
+
+    try {
+      // Create a safe execution context with XLSX available
+      const safeContext = {
+        XLSX: XLSX,
+        console: {
+          log: (...args: unknown[]) => {
+            const message = args.map(arg => 
+              typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ')
+            setExecutionResult(prev => (prev ? prev + '\n' + message : message))
+          }
+        },
+        alert: (message: string) => {
+          setExecutionResult(prev => (prev ? prev + '\nAlert: ' + message : 'Alert: ' + message))
+        }
+      }
+
+      // Execute the code in the safe context
+      const func = new Function(...Object.keys(safeContext), code)
+      const result = func(...Object.values(safeContext))
+      
+      if (result !== undefined) {
+        const resultStr = typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
+        setExecutionResult(prev => (prev ? prev + '\nResult: ' + resultStr : 'Result: ' + resultStr))
+      } else if (!executionResult) {
+        setExecutionResult('Code executed successfully!')
+      }
+
+    } catch (error) {
+      setExecutionResult(`Error: ${(error as Error).message}`)
+    } finally {
+      setIsExecuting(false)
+    }
   }
 
   return (
@@ -242,6 +329,16 @@ public class Fibonacci {
             <button className="control-button" onClick={resetEditor} title="Clear editor">
               🗑️ Clear
             </button>
+            {language === 'javascript' && (
+              <button 
+                className="control-button execute-button" 
+                onClick={executeCode} 
+                title="Execute JavaScript/SheetJS code"
+                disabled={isExecuting}
+              >
+                {isExecuting ? '⏳ Running...' : '▶️ Execute'}
+              </button>
+            )}
           </div>
         </div>
         
@@ -345,6 +442,22 @@ public class Fibonacci {
             }}
           />
         </div>
+        
+        {executionResult && (
+          <div className="execution-result">
+            <div className="result-header">
+              <span className="result-title">Execution Result</span>
+              <button 
+                className="clear-result-button" 
+                onClick={() => setExecutionResult(null)}
+                title="Clear result"
+              >
+                ✕
+              </button>
+            </div>
+            <pre className="result-content">{executionResult}</pre>
+          </div>
+        )}
         
         <div className="convert-section">
           <button 
