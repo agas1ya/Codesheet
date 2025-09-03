@@ -197,12 +197,6 @@ public class Fibonacci {
     })
   }
 
-  const formatCode = () => {
-    if (editorRef.current) {
-      editorRef.current.getAction('editor.action.formatDocument')?.run()
-    }
-  }
-
   const resetEditor = () => {
     setCode('')
     setFontSize(14)
@@ -244,9 +238,6 @@ public class Fibonacci {
           <div className="editor-controls">
             <button className="control-button" onClick={loadSample} title="Load sample code">
               📝 Load Sample
-            </button>
-            <button className="control-button" onClick={formatCode} title="Format code (Shift+Alt+F)">
-              ✨ Format
             </button>
             <button className="control-button" onClick={resetEditor} title="Clear editor">
               🗑️ Clear
