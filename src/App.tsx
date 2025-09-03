@@ -144,7 +144,7 @@ console.log("Excel file created and downloaded!");`
   return (
     <div className="app">
       <header className="app-header">
-        <h1>JavaScript Code Executor</h1>
+        <h1>SheetJS Code Executor</h1>
         <p>Write and execute JavaScript/SheetJS code in your browser</p>
       </header>
       
