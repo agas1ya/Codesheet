@@ -358,7 +358,9 @@ public class Fibonacci {
       </main>
       
       <footer className="app-footer">
-        <p>Made by Agastya</p>
+        <p>© 2025 Code to Spreadsheet Converter</p>
+        <p>Created by Agastya Dubey</p>
+        <p>All rights reserved. Your code is processed locally in your browser.</p>
       </footer>
     </div>
   )
