@@ -6,7 +6,6 @@ import './App.css'
 
 function App() {
   const [code, setCode] = useState('')
-  const [language, setLanguage] = useState('javascript')
   const [isConverting, setIsConverting] = useState(false)
   const [executionResult, setExecutionResult] = useState<string | null>(null)
   const [theme, setTheme] = useState('vs-dark')
@@ -18,11 +17,6 @@ function App() {
   const executeCode = () => {
     if (!code.trim()) {
       alert('Please enter some code to execute!')
-      return
-    }
-
-    if (language !== 'javascript') {
-      alert('Code execution is only supported for JavaScript/SheetJS code!')
       return
     }
 
@@ -64,12 +58,7 @@ function App() {
     }
   }
 
-  const handleLanguageChange = (selectedLanguage: string) => {
-    setLanguage(selectedLanguage)
-  }
-
-  const sampleCode = {
-    javascript: `// Sample SheetJS code - Creates and downloads an Excel file
+  const sampleCode = `// Sample SheetJS code - Creates and downloads an Excel file
 const workbook = XLSX.utils.book_new();
 
 // Create sample data
@@ -112,31 +101,10 @@ XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
 // Download the file
 XLSX.writeFile(workbook, "student-data.xlsx");
 
-console.log("Excel file created and downloaded!");`,
-    python: `# Sample Python code
-def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n - 1) + fibonacci(n - 2)
-
-numbers = [1, 2, 3, 4, 5]
-doubled = [x * 2 for x in numbers]
-print(doubled)`,
-    java: `// Sample Java code
-public class Fibonacci {
-    public static int fibonacci(int n) {
-        if (n <= 1) return n;
-        return fibonacci(n - 1) + fibonacci(n - 2);
-    }
-    
-    public static void main(String[] args) {
-        System.out.println(fibonacci(10));
-    }
-}`
-  }
+console.log("Excel file created and downloaded!");`
 
   const loadSample = () => {
-    setCode(sampleCode[language as keyof typeof sampleCode] || sampleCode.javascript)
+    setCode(sampleCode)
   }
 
   const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
@@ -176,35 +144,13 @@ public class Fibonacci {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Code to Spreadsheet Converter</h1>
-        <p>Paste your code below and convert it to a downloadable Excel file with analysis</p>
+        <h1>JavaScript Code Executor</h1>
+        <p>Write and execute JavaScript/SheetJS code in your browser</p>
       </header>
       
       <main className="app-main">
-        <div className="controls">
-          <div className="language-selector">
-            <label htmlFor="language">Language:</label>
-            <select 
-              id="language"
-              value={language} 
-              onChange={(e) => handleLanguageChange(e.target.value)}
-            >
-              <option value="javascript">JavaScript</option>
-              <option value="typescript">TypeScript</option>
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-              <option value="cpp">C++</option>
-              <option value="csharp">C#</option>
-              <option value="php">PHP</option>
-              <option value="go">Go</option>
-              <option value="rust">Rust</option>
-              <option value="html">HTML</option>
-              <option value="css">CSS</option>
-              <option value="sql">SQL</option>
-              <option value="plaintext">Plain Text</option>
-            </select>
-          </div>
-          <div className="editor-controls">
+        <div className="editor-settings">
+          <div className="setting-group">
             <button className="control-button" onClick={loadSample} title="Load sample code">
               📝 Load Sample
             </button>
@@ -212,9 +158,7 @@ public class Fibonacci {
               🗑️ Clear
             </button>
           </div>
-        </div>
-        
-        <div className="editor-settings">
+          
           <div className="setting-group">
             <label htmlFor="theme">Theme:</label>
             <select 
@@ -270,12 +214,12 @@ public class Fibonacci {
             <div className="editor-info">
               <span>Lines: {code.split('\n').length}</span>
               <span>Characters: {code.length}</span>
-              <span>Language: {language}</span>
+              <span>Language: JavaScript</span>
             </div>
           </div>
           <Editor
             height="400px"
-            language={language}
+            language="javascript"
             theme={theme}
             value={code}
             onChange={(value) => setCode(value || '')}
