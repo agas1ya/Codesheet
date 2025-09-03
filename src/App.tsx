@@ -8,7 +8,6 @@ function App() {
   const [code, setCode] = useState('')
   const [language, setLanguage] = useState('javascript')
   const [isConverting, setIsConverting] = useState(false)
-  const [isExecuting, setIsExecuting] = useState(false)
   const [executionResult, setExecutionResult] = useState<string | null>(null)
   const [theme, setTheme] = useState('vs-dark')
   const [fontSize, setFontSize] = useState(14)
@@ -16,118 +15,50 @@ function App() {
   const [minimap, setMinimap] = useState(false)
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null)
 
-  const detectLanguage = (codeText: string): string => {
-    const trimmedCode = codeText.trim()
-    
-    // Simple language detection based on common patterns
-    if (trimmedCode.includes('import ') && trimmedCode.includes('from ')) return 'javascript'
-    if (trimmedCode.includes('def ') || trimmedCode.includes('import ')) return 'python'
-    if (trimmedCode.includes('#include') || trimmedCode.includes('int main')) return 'cpp'
-    if (trimmedCode.includes('public class') || trimmedCode.includes('import java')) return 'java'
-    if (trimmedCode.includes('function') || trimmedCode.includes('const ') || trimmedCode.includes('let ')) return 'javascript'
-    if (trimmedCode.includes('<?php')) return 'php'
-    if (trimmedCode.includes('<html') || trimmedCode.includes('<div')) return 'html'
-    if (trimmedCode.includes('body {') || trimmedCode.includes('.class')) return 'css'
-    
-    return 'plaintext'
-  }
-
-  const parseCodeToData = (codeText: string) => {
-    const lines = codeText.split('\n')
-    const data: (string | number)[][] = []
-    
-    // Add headers
-    data.push(['Line', 'Code', 'Type', 'Length'])
-    
-    // Add each line of code with analysis
-    lines.forEach((line, index) => {
-      const lineNumber = index + 1
-      const trimmedLine = line.trim()
-      let lineType = 'code'
-      
-      // Analyze line type
-      if (trimmedLine === '') {
-        lineType = 'empty'
-      } else if (trimmedLine.startsWith('//') || trimmedLine.startsWith('#') || trimmedLine.startsWith('/*')) {
-        lineType = 'comment'
-      } else if (trimmedLine.includes('import ') || trimmedLine.includes('from ') || trimmedLine.includes('#include')) {
-        lineType = 'import'
-      } else if (trimmedLine.includes('function ') || trimmedLine.includes('def ') || trimmedLine.includes('class ')) {
-        lineType = 'declaration'
-      }
-      
-      data.push([lineNumber, line, lineType, line.length])
-    })
-    
-    return data
-  }
-
-  const convertToSpreadsheet = () => {
+  const executeCode = () => {
     if (!code.trim()) {
-      alert('Please enter some code to convert!')
+      alert('Please enter some code to execute!')
+      return
+    }
+
+    if (language !== 'javascript') {
+      alert('Code execution is only supported for JavaScript/SheetJS code!')
       return
     }
 
     setIsConverting(true)
-    
+    setExecutionResult(null)
+
     try {
-      // Parse code into data
-      const data = parseCodeToData(code)
-      
-      // Create a new workbook
-      const workbook = XLSX.utils.book_new()
-      
-      // Create main code sheet
-      const codeSheet = XLSX.utils.aoa_to_sheet(data)
-      
-      // Set column widths for better formatting
-      codeSheet['!cols'] = [
-        { width: 8 },   // Line number
-        { width: 80 },  // Code
-        { width: 15 },  // Type
-        { width: 10 }   // Length
-      ]
-      
-      // Add conditional formatting style (basic)
-      const range = XLSX.utils.decode_range(codeSheet['!ref'] || 'A1')
-      for (let R = range.s.r + 1; R <= range.e.r; R++) {
-        const typeCell = XLSX.utils.encode_cell({ r: R, c: 2 })
-        if (codeSheet[typeCell] && codeSheet[typeCell].v === 'comment') {
-          // Mark comment rows (would need more advanced styling in real implementation)
+      // Create a safe execution context with XLSX available
+      const safeContext = {
+        XLSX: XLSX,
+        console: {
+          log: (...args: unknown[]) => {
+            const message = args.map(arg => 
+              typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ')
+            setExecutionResult(prev => (prev ? prev + '\n' + message : message))
+          }
+        },
+        alert: (message: string) => {
+          setExecutionResult(prev => (prev ? prev + '\nAlert: ' + message : 'Alert: ' + message))
         }
       }
+
+      // Execute the code in the safe context
+      const func = new Function(...Object.keys(safeContext), code)
+      const result = func(...Object.values(safeContext))
       
-      XLSX.utils.book_append_sheet(workbook, codeSheet, 'Code Analysis')
-      
-      // Create summary sheet
-      const summary = [
-        ['Metric', 'Value'],
-        ['Total Lines', data.length - 1],
-        ['Non-empty Lines', data.filter(row => row[2] !== 'empty').length - 1],
-        ['Comment Lines', data.filter(row => row[2] === 'comment').length],
-        ['Import Lines', data.filter(row => row[2] === 'import').length],
-        ['Declaration Lines', data.filter(row => row[2] === 'declaration').length],
-        ['Average Line Length', Math.round(data.slice(1).reduce((sum, row) => sum + Number(row[3]), 0) / (data.length - 1))],
-        ['Detected Language', detectLanguage(code)],
-        ['Generated On', new Date().toLocaleString()]
-      ]
-      
-      const summarySheet = XLSX.utils.aoa_to_sheet(summary)
-      summarySheet['!cols'] = [{ width: 20 }, { width: 20 }]
-      
-      XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary')
-      
-      // Generate filename with timestamp
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')
-      const detectedLang = detectLanguage(code)
-      const filename = `code-analysis-${detectedLang}-${timestamp}.xlsx`
-      
-      // Write and download the file
-      XLSX.writeFile(workbook, filename)
-      
+      if (result !== undefined) {
+        const resultStr = typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
+        setExecutionResult(prev => (prev ? prev + '\nResult: ' + resultStr : 'Result: ' + resultStr))
+      } else if (!executionResult) {
+        setExecutionResult('Code executed successfully!')
+      }
+
     } catch (error) {
-      console.error('Error converting code:', error)
-      alert('An error occurred while converting the code. Please try again.')
+      setExecutionResult(`Error: ${(error as Error).message}`)
     } finally {
       setIsConverting(false)
     }
@@ -242,55 +173,6 @@ public class Fibonacci {
     setExecutionResult(null)
   }
 
-  const executeCode = () => {
-    if (!code.trim()) {
-      alert('Please enter some code to execute!')
-      return
-    }
-
-    if (language !== 'javascript') {
-      alert('Code execution is only supported for JavaScript/SheetJS code!')
-      return
-    }
-
-    setIsExecuting(true)
-    setExecutionResult(null)
-
-    try {
-      // Create a safe execution context with XLSX available
-      const safeContext = {
-        XLSX: XLSX,
-        console: {
-          log: (...args: unknown[]) => {
-            const message = args.map(arg => 
-              typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-            ).join(' ')
-            setExecutionResult(prev => (prev ? prev + '\n' + message : message))
-          }
-        },
-        alert: (message: string) => {
-          setExecutionResult(prev => (prev ? prev + '\nAlert: ' + message : 'Alert: ' + message))
-        }
-      }
-
-      // Execute the code in the safe context
-      const func = new Function(...Object.keys(safeContext), code)
-      const result = func(...Object.values(safeContext))
-      
-      if (result !== undefined) {
-        const resultStr = typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result)
-        setExecutionResult(prev => (prev ? prev + '\nResult: ' + resultStr : 'Result: ' + resultStr))
-      } else if (!executionResult) {
-        setExecutionResult('Code executed successfully!')
-      }
-
-    } catch (error) {
-      setExecutionResult(`Error: ${(error as Error).message}`)
-    } finally {
-      setIsExecuting(false)
-    }
-  }
-
   return (
     <div className="app">
       <header className="app-header">
@@ -329,16 +211,6 @@ public class Fibonacci {
             <button className="control-button" onClick={resetEditor} title="Clear editor">
               🗑️ Clear
             </button>
-            {language === 'javascript' && (
-              <button 
-                className="control-button execute-button" 
-                onClick={executeCode} 
-                title="Execute JavaScript/SheetJS code"
-                disabled={isExecuting}
-              >
-                {isExecuting ? '⏳ Running...' : '▶️ Execute'}
-              </button>
-            )}
           </div>
         </div>
         
@@ -462,10 +334,10 @@ public class Fibonacci {
         <div className="convert-section">
           <button 
             className="convert-button" 
-            onClick={convertToSpreadsheet}
+            onClick={executeCode}
             disabled={isConverting || !code.trim()}
           >
-            {isConverting ? 'Converting...' : 'Convert to Excel'}
+            {isConverting ? 'Executing...' : 'Execute Code'}
           </button>
         </div>
       </main>
