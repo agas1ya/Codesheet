@@ -50,6 +50,39 @@
   padding: 1rem 1.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.editor-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.control-button {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.control-button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+  transform: translateY(-1px);
+}
+
+.control-button:active {
+  transform: translateY(0);
 }
 
 .language-selector {
@@ -78,6 +111,50 @@
   border-color: black;
 }
 
+.editor-settings {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.setting-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.setting-group label {
+  font-weight: 500;
+  color: #495057;
+  white-space: nowrap;
+}
+
+.setting-group select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.setting-group input[type="range"] {
+  width: 80px;
+  cursor: pointer;
+}
+
+.setting-group input[type="checkbox"] {
+  cursor: pointer;
+  margin-right: 0.25rem;
+}
+
 .sample-button {
   background: black;
   color: white;
@@ -98,10 +175,66 @@
 .editor-container {
   background: white;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 0;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border: 2px solid #e5e7eb;
+  border: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 0.875rem;
+}
+
+.editor-title {
+  font-weight: 600;
+  color: #495057;
+}
+
+.editor-info {
+  display: flex;
+  gap: 1rem;
+  color: #6c757d;
+  font-size: 0.75rem;
+}
+
+.editor-info span {
+  padding: 0.25rem 0.5rem;
+  background: #e9ecef;
+  border-radius: 4px;
+}
+
+.editor-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e5e7eb;
+  z-index: 1;
+  display: none; /* Hide the old pseudo-element */
+}
+
+.editor-container::after {
+  content: 'Code Editor';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40px;
+  display: none; /* Hide the old pseudo-element */
+}
+
+.editor-container > div:last-child {
+  border-radius: 0 0 12px 12px;
 }
 
 .convert-section {
@@ -157,7 +290,6 @@
   
   .controls {
     flex-direction: column;
-    gap: 1rem;
     align-items: stretch;
   }
   
@@ -165,8 +297,22 @@
     justify-content: center;
   }
   
-  .editor-container {
-    padding: 0.5rem;
+  .editor-controls {
+    justify-content: center;
+  }
+  
+  .editor-settings {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .setting-group {
+    justify-content: space-between;
+  }
+  
+  .editor-info {
+    flex-direction: column;
+    gap: 0.25rem;
   }
   
   .convert-button {
