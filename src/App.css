@@ -88,27 +88,47 @@
 .language-selector {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .language-selector label {
-  font-weight: 500;
+  font-weight: 600;
   color: #374151;
+  font-size: 0.875rem;
 }
 
 .language-selector select {
-  padding: 0.5rem 1rem;
+  min-width: 140px;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
   border: 2px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 10px;
   background: white;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23374151' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.25em 1.25em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.language-selector select:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .language-selector select:focus {
   outline: none;
-  border-color: black;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.language-selector select:active {
+  transform: none;
 }
 
 .editor-settings {
