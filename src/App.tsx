@@ -356,6 +356,10 @@ public class Fibonacci {
           </button>
         </div>
       </main>
+      
+      <footer className="app-footer">
+        <p>Made by Agastya</p>
+      </footer>
     </div>
   )
 }
